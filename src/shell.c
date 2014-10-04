@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include "clib.h"
 #include <string.h>
+#include <stdlib.h>
 #include "fio.h"
 #include "filesystem.h"
 
@@ -24,7 +25,7 @@ void help_command(int, char **);
 void host_command(int, char **);
 void mmtest_command(int, char **);
 void test_command(int, char **);
-
+void exit_command(int, char **);
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
 cmdlist cl[]={
@@ -35,7 +36,8 @@ cmdlist cl[]={
 	MKCL(host, "Run command on host"),
 	MKCL(mmtest, "heap memory allocation test"),
 	MKCL(help, "help"),
-	MKCL(test, "test new function")
+	MKCL(test, "test new function"),
+	MKCL(exit, "exit qemu shell")
 };
 
 int parse_command(char *str, char *argv[]){
@@ -61,6 +63,13 @@ int parse_command(char *str, char *argv[]){
 
 void ls_command(int n, char *argv[]){
 
+
+}
+
+// use semihost to kill qemu process
+void exit_command(int n, char *argv[]){
+	char command[] = "pkill qemu";	
+        host_action(SYS_SYSTEM, command);
 }
 
 int filedump(const char *filename){
@@ -143,9 +152,32 @@ void help_command(int n,char *argv[]){
 void test_command(int n, char *argv[]) {
     int handle;
     int error;
-
+	if(n==1){
+		fio_printf(2, "\r\nUsage: test <num>\r\n");
+		return;
+	}
     fio_printf(1, "\r\n");
-
+    int isPrime[100];
+    int i,j,num = 0;
+    /* convert argv[1] to numbers */
+    for(i=0;i<strlen(argv[1]);i++)
+    {
+	num *= 10;
+	num += *(argv[1]+i) - '0';
+    }
+    /* build prime table */
+    for(i=0;i<100;i++)
+	isPrime[i] = 1;
+    isPrime[0] = isPrime[1] = 0;
+    for(i=2;i<100;i++)
+	if(isPrime[i]==1)
+	   for(j=i*2;j<100;j+=i)
+		isPrime[j]=0;
+    if( isPrime[num] )
+	fio_printf(1, "%s is prime number\n\r",argv[1]);
+    else
+	fio_printf(1, "%s is not prime number\n\r",argv[1]);
+    handle = host_action(SYS_SYSTEM,"mkdir -p output");
     handle = host_action(SYS_OPEN, "output/syslog", 8);
     if(handle == -1) {
         fio_printf(1, "Open file error!\n\r");
