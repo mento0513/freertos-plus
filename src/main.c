@@ -115,7 +115,7 @@ void system_logger(void *pvParameters)
     char *tag = "\nName          State   Priority  Stack  Num\n*******************************************\n";
     int handle, error;
     const portTickType xDelay = 100000 / 100;
-
+    handle = host_action(SYS_SYSTEM,"mkdir -p output");
     handle = host_action(SYS_OPEN, "output/syslog", 4);
     if(handle == -1) {
         fio_printf(1, "Open file error!\n");
@@ -170,12 +170,10 @@ int main()
 	            (signed portCHAR *) "CLI",
 	            512 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
 
-#if 0
 	/* Create a task to record system log. */
 	xTaskCreate(system_logger,
 	            (signed portCHAR *) "Logger",
 	            1024 /* stack size */, NULL, tskIDLE_PRIORITY + 1, NULL);
-#endif
 
 	/* Start running the tasks. */
 	vTaskStartScheduler();
