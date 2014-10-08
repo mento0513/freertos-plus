@@ -30,7 +30,7 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
     struct dirent * ent;
     DIR * rec_dirp;
     uint32_t cur_hash = hash_djb2((const uint8_t *) curpath, hash_init);
-    uint32_t size, w, hash;
+    uint32_t size, w, hash, fnsize;
     uint8_t b;
     FILE * infile;
 
@@ -59,10 +59,22 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
                 perror("opening input file");
                 exit(-1);
             }
+	    /* store hash value */
             b = (hash >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+	    /* store filename size */
+	    fnsize = strlen(ent->d_name);
+            b = (fnsize >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (fnsize >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (fnsize >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (fnsize >> 24) & 0xff; fwrite(&b, 1, 1, outfile); 
+	    /* store filename */
+	    int i;
+	    for(i=0;i<fnsize;i++)
+		fwrite(ent->d_name+i, 1, 1, outfile); 
+	    /* store file size */
             fseek(infile, 0, SEEK_END);
             size = ftell(infile);
             fseek(infile, 0, SEEK_SET);
@@ -70,6 +82,7 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
             b = (size >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+	    /* store file content */
             while (size) {
                 w = size > 16 * 1024 ? 16 * 1024 : size;
                 fread(buf, 1, w, infile);
