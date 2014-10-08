@@ -14,7 +14,7 @@ struct fs_t {
     void * opaque;
 };
 
-static struct fs_t fss[MAX_FS];
+struct fs_t fss[MAX_FS];
 
 __attribute__((constructor)) void fs_init() {
     memset(fss, 0, sizeof(fss));
