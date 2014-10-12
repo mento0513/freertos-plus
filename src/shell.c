@@ -202,18 +202,22 @@ void test_command(int n, char *argv[]) {
 	if(isPrime[i]==1)
 	   for(j=i*2;j<100;j+=i)
 		isPrime[j]=0;
+    char res[100];
+    strcpy(res,argv[1]);
     if( isPrime[num] )
-	fio_printf(1, "%s is prime number\n\r",argv[1]);
+	strcat(res, " is prime number\n");
     else
-	fio_printf(1, "%s is not prime number\n\r",argv[1]);
+	strcat(res, " is not prime number\n");
+    fio_printf(1, "%s\r",res);
     handle = host_action(SYS_SYSTEM,"mkdir -p output");
-    handle = host_action(SYS_OPEN, "output/syslog", 8);
+    handle = host_action(SYS_OPEN, "output/result", 8);
     if(handle == -1) {
         fio_printf(1, "Open file error!\n\r");
         return;
     }
 
-    char *buffer = "Test host_write function which can write data to output/syslog\n";
+    char buffer[100] = "Test host_write function which can write data to output/result\n";
+    strcat(buffer,res);
     error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
     if(error != 0) {
         fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
