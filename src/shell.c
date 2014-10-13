@@ -16,17 +16,6 @@ typedef struct {
 	const char *desc;
 } cmdlist;
 
-struct fs_t {
-	uint32_t hash;
-	fs_open_t cb;
-	void * opaque;
-};
-extern struct fs_t fss[MAX_FS];
-
-static uint32_t get_unaligned(const uint8_t * d){
-return ((uint32_t) d[0]) | ((uint32_t) (d[1] << 8)) | ((uint32_t) (d[2] << 16)) | ((uint32_t) (d[3] << 24));
-}
-
 void ls_command(int, char **);
 void man_command(int, char **);
 void cat_command(int, char **);
@@ -77,22 +66,13 @@ void ls_command(int n, char *argv[]){
 		fio_printf(1,"\r\nromfs\n\r");
 		return;
 	}
-	const uint8_t * meta;
-	char *fs = "romfs";
-	uint32_t hash = hash_djb2((const uint8_t *)fs, -1);
 	int i;
-	char *name = NULL;
-	fio_printf(1,"\r\n");
-	for(i=0;i<MAX_FS;i++){
-		if(fss[i].hash == hash){
-			const uint8_t * romfs = (const uint8_t *)fss[i].opaque;
-			for(meta = romfs; get_unaligned(meta) && get_unaligned(meta + 8 + get_unaligned(meta + 4)); meta += get_unaligned(meta + 4) + get_unaligned(meta + 8 + get_unaligned(meta + 4)) + 12) {
-				name = (char *)meta+8;
-				fio_printf(1,"%s\t",name);
-			}
-		}
-	}
-	fio_printf(1,"\r\n");
+	for(i = 0 ; argv[1][i] != '\0' ; i++)
+		if(argv[1][i+1] == '\0' && argv[1][i] != '/')
+			argv[1][i+1] = '/',argv[1][i+2] = '\0';
+	int fd=fs_open(argv[1],1,O_RDONLY);
+	if( fd==-2 )
+		fio_printf(1,"\r\n no such file or directory.\r\n");
 }
 
 // use semihost to kill qemu process
