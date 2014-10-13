@@ -115,9 +115,7 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     const uint8_t * file;
     int r = -1;
     if( flags == 1)
-    {
 	romfs_list(romfs,path);
-    }
 
     file = romfs_get_file_by_hash(romfs, h, NULL);
 
