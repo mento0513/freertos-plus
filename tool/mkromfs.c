@@ -65,7 +65,7 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
             b = (hash >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
 	    /* store filename size */
-	    fnsize = strlen(ent->d_name);
+	    fnsize = strlen(fullpath);
             b = (fnsize >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (fnsize >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (fnsize >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
@@ -73,7 +73,7 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
 	    /* store filename */
 	    int i;
 	    for(i=0;i<fnsize;i++)
-		fwrite(ent->d_name+i, 1, 1, outfile); 
+		fwrite(fullpath+i, 1, 1, outfile); 
 	    /* store file size */
             fseek(infile, 0, SEEK_END);
             size = ftell(infile);
