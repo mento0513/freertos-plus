@@ -7,6 +7,7 @@
 #include "romfs.h"
 #include "osdebug.h"
 #include "hash-djb2.h"
+#include "clib.h"
 
 struct romfs_fds_t {
     const uint8_t * file;
@@ -80,11 +81,43 @@ const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32
     return NULL;
 }
 
+void romfs_list(const uint8_t *romfs,const char *path)
+{
+	char filepath[256],res[256];
+	char dir[256] = "data/test-romfs/";
+	strcat(dir,path);
+    	const uint8_t * meta;
+	int i;
+	fio_printf(1,"\n\r");
+	int check = 0;
+	for (meta = romfs; get_unaligned(meta) && get_unaligned(meta + 8 + get_unaligned(meta + 4)); meta += get_unaligned(meta + 4) + get_unaligned(meta + 8 + get_unaligned(meta + 4)) + 12) {
+		for(i=0;i<(int)get_unaligned(meta+4);i++){
+			filepath[i] = meta[i+8];
+		}
+		filepath[i] = '\0';
+		if( strstr(filepath,dir) != NULL){
+			for(i=strlen(dir);i<strlen(filepath) && filepath[i] != '/';i++){
+				res[i-strlen(dir)] = filepath[i];
+			}
+			res[i-strlen(dir)] = '\0';
+			fio_printf(1,"%s\t",res);
+			check = 1;
+		}
+	}
+	if( !check )
+		fio_printf(1,"no such directory.");
+	fio_printf(1,"\n\r");
+}
+
 static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     uint32_t h = hash_djb2((const uint8_t *) path, -1);
     const uint8_t * romfs = (const uint8_t *) opaque;
     const uint8_t * file;
     int r = -1;
+    if( flags == 1)
+    {
+	romfs_list(romfs,path);
+    }
 
     file = romfs_get_file_by_hash(romfs, h, NULL);
 
@@ -103,3 +136,4 @@ void register_romfs(const char * mountpoint, const uint8_t * romfs) {
 //    DBGOUT("Registering romfs `%s' @ %p\r\n", mountpoint, romfs);
     register_fs(mountpoint, romfs_open, (void *) romfs);
 }
+
