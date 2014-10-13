@@ -14,7 +14,7 @@ struct fs_t {
     void * opaque;
 };
 
-struct fs_t fss[MAX_FS];
+static struct fs_t fss[MAX_FS];
 
 __attribute__((constructor)) void fs_init() {
     memset(fss, 0, sizeof(fss));
@@ -46,10 +46,10 @@ int fs_open(const char * path, int flags, int mode) {
         path++;
     
     slash = strchr(path, '/');
-    
-    if (!slash)
-        return -2;
 
+    if (!slash)
+	return -2;
+    
     hash = hash_djb2((const uint8_t *) path, slash - path);
     path = slash + 1;
 
